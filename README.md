@@ -1,12 +1,19 @@
-# SImple-NodeJS-ExpressJS-Starter-API
-Simple Node.js and Express.js Starter Server API
+# Carboncoin ICO Backend
 
-API (POST, GET, PUT, DELETE) connected with a MySQL database. 
+1. Scrapes ETC in contact from gastracker.io
+1. Scrapes Tokens in an Account from gastracker.io
+1. Pulls Tokens in an account from ethersacn api
+
+It saves all this data a json file, which it pulls out on demand. This json file gets updates if a request is made when the fileis more than 5mins old.
+
+TODO: 
+- Admin/accounting panel
+- Deploy/verify Ethereum Contract so it is accessible via API
+
+Maybe I need to do the scrape for the Ethereum Contract as well..
 
 # How to use it?
 
 * Download this repo.
 * Run `npm install` command inside project folder.
-* Add information about your MySQL database in `server.js`.
-* Run `node server` in CMD.
-* Open `localhost:8080` in web browser.
+* Run `npm start` in CMD.
