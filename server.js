@@ -76,9 +76,6 @@ var updateJson = new Promise( (resolve, reject) => {
     })
     });
 
-
-    console.log(data);
-
     var data = {
         "ETC_contract": etherClassic,
         "NCC_tokens_left": nccTokens,
@@ -93,7 +90,7 @@ var updateJson = new Promise( (resolve, reject) => {
     // when(data["ETC_contract"] != null && data["NCC_tokens_left"] != null && data["NCCh_tokens_left"] != null).then(function(){
     // Promise.all([ethereumData , etherInContract , classicTokensInAccount], function(values){ 
 
-    etherInContract.then(function(value){ //this works but is not ideal
+    Promise.all([ethereumData, etherInContract, classicTokensInAccount]).then(function(value){ //this works but is not ideal
         console.log("we're in ");
         data["timeStamp"] = moment().unix();
         console.log(data["timeStamp"]);
@@ -118,8 +115,8 @@ var readInJson = new Promise((resolve, reject) => {
         const fiveMinsAgo = moment().unix() - 5*60;
         // console.log(fiveMinsAgo);
         if(data.timeStamp < fiveMinsAgo){
-            updateJson();
-            console.log("Json updating");
+            console.log("Json updating");            
+            updateJson.then((value) =>{data = value; resolve(data)});
         } else {
             return resolve(data);
         }
