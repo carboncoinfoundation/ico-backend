@@ -5,6 +5,13 @@ var async = require('async');
 var fs = require('fs');
 var moment = require('moment');
 
+require('dotenv').config();
+
+var classicContractAddress = process.env.CLASSIC_CONTRACT;
+var ethereumContractAddress = process.env.ETHER_CONTRACT;
+var ethereumWalletAddress = process.env.ETHER_WALLET;
+var etherscanAPIKey = process.env.ETHERSCAN_KEY;
+
 var updateJson = new Promise( (resolve, reject) => {
     var data = {
         "ETC_contract": null,
@@ -13,7 +20,7 @@ var updateJson = new Promise( (resolve, reject) => {
     };
 
     var nccTokens;
-    var classicTokensInAccount = new Promise((resolve, reject)=> { request('https://gastracker.io/token/0x085fb4f24031EAedbC2B611AA528f22343eB52Db/0x085fb4f24031EAedbC2B611AA528f22343eB52Db', function (error, response, body) {
+    var classicTokensInAccount = new Promise((resolve, reject)=> { request('https://gastracker.io/token/'+classicContractAddress+'/'+classicContractAddress, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             const dom = new JSDOM(body);
             const untrimmedContent = dom.window.document.querySelectorAll("dd")[2].textContent;
@@ -31,7 +38,7 @@ var updateJson = new Promise( (resolve, reject) => {
     });
 
     var etherClassic;
-    var etherInContract = new Promise((resolve, reject)=> { request('http://gastracker.io/addr/0x085fb4f24031eaedbc2b611aa528f22343eb52db', function (error, response, body2) {
+    var etherInContract = new Promise((resolve, reject)=> { request('http://gastracker.io/addr/'+classicContractAddress, function (error, response, body2) {
         if (!error && response.statusCode == 200) {
         const dom2 = new JSDOM(body2);
         const untrimmedContent2 = dom2.window.document.querySelectorAll("dd")[2].textContent;
@@ -57,8 +64,8 @@ var updateJson = new Promise( (resolve, reject) => {
     //https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress=0x47f92ebf4881359469bceffe1f753fe910701024&address=0xDAE0f24b37B36A9Fd2398d396551EC524e284ae7&tag=latest&apikey=K2JMIK8PSP47I1BAGDDT6MGXMS4EHW15MH
 
     var ncchTokens;
-
-    var ethereumData = new Promise((resolve, reject)=> { request('https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress=0x47f92ebf4881359469bceffe1f753fe910701024&address=0xDAE0f24b37B36A9Fd2398d396551EC524e284ae7&tag=latest&apikey=K2JMIK8PSP47I1BAGDDT6MGXMS4EHW15MH', function (error, response, body) {
+    console.log('ethereumCAd='+ethereumContractAddress)
+    var ethereumData = new Promise((resolve, reject)=> { request('https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress='+ ethereumContractAddress +'&address='+ethereumWalletAddress+'&tag=latest&apikey='+etherscanAPIKey, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             jsonData = JSON.parse(body);
             ncchTokens = jsonData['result'];
