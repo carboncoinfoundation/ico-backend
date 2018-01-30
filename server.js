@@ -15,12 +15,26 @@ icoRoutes.use(cookieParser());
 
 //(GET http://localhost:8080/ico)
 icoRoutes.get('/get-token-data', function(req, res) {
+
+  // Display the balances to all users
+  balanceCheker.then((value) => {
+      res.json(value);
+  });
+
+});
+
+icoRoutes.get('/get-contract-addresses', function(req, res) {
+
+  // Only display contract addresses to people who accept the terms
   if (req.cookies[acceptance_cookie]) {
-    balanceCheker.then((value) => {
-        res.json(value);
+
+    res.json({
+      'NCC_Contract': process.env.CLASSIC_CONTRACT,
+      'NCCh_Contract': process.env.ETHER_CONTRACT,
     });
+
   } else {
-    return res.send(401, 'Please accept ICO terms to proceed');
+    res.status(401).send('Please accept ICO terms to proceed');
   }
 });
 
