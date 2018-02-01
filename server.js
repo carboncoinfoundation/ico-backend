@@ -13,6 +13,12 @@ var port = process.env.PORT || 8080;
 var icoRoutes = express.Router();
 icoRoutes.use(cookieParser());
 
+icoRoutes.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 //(GET http://localhost:8080/ico)
 icoRoutes.get('/get-token-data', function(req, res) {
 
