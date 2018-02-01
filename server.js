@@ -1,5 +1,6 @@
 var express = require('express');
 var app = express();
+var cors = require('cors');
 var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser');
 var balanceCheker = require('./balance-checker');
@@ -8,18 +9,13 @@ var acceptance_cookie = 'CarboncoinICOTerms_accepted';
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  next();
-});
+
+app.use(cors({credentials: true, origin: 'http://localhost:4000'}));
 
 var port = process.env.PORT || 8080;
 
 var icoRoutes = express.Router();
 icoRoutes.use(cookieParser());
-
-
 
 //(GET http://localhost:8080/ico)
 icoRoutes.get('/get-token-data', function(req, res) {
