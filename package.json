@@ -1,19 +1,21 @@
 {
-  "name": "UsersAPI",
+  "name": "CarboncoinICOBackend",
   "version": "1.0.0",
-  "description": "An example of a simple Node.js and Express.js RESTful API",
+  "description": "Services for the Carboncoin ICO",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "Tomislav Stankovic",
+  "author": "Carboncoin dev team",
   "license": "MIT",
   "dependencies": {
+    "async": "^2.6.0",
     "body-parser": "^1.15.2",
+    "cookie-parser": "^1.4.3",
+    "dotenv": "^5.0.0",
     "etherscan-api": "^4.0.0",
     "express": "^4.14.0",
-    "jquery": "^3.3.1",
     "jsdom": "^11.5.1",
     "moment": "^2.20.1"
   }
