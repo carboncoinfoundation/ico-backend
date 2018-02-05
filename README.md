@@ -2,7 +2,7 @@
 
 1. Scrapes ETC in contact from gastracker.io
 1. Scrapes Tokens in an Account from gastracker.io
-1. Pulls Tokens in an account from ethersacn api
+1. Pulls Tokens in an account from etherscan api
 
 It saves all this data a json file, which it pulls out on demand. This json file gets updates if a request is made when the fileis more than 5mins old.
 
