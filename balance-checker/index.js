@@ -15,43 +15,24 @@ var ethereumWalletAddress = process.env.ETHER_WALLET;
 var etherscanAPIKey = process.env.ETHERSCAN_KEY;
 
 var updateJson = new Promise( (resolve, reject) => {
-    var data = {
-        "ETC_wallet": null,
-        "NCC_tokens_left": null,
-        "NCCh_tokens_left": null
-    };
+    var data = {};
+    var takenOut = {
+        "ETH_TAKEN_OUT":0,
+        "ETC_TAKEN_OUT":0,  
+    }
 
-    var nccTokens;
-    var classicTokensInAccount = new Promise((resolve, reject)=> { request('https://gastracker.io/token/'+classicTokenAddress+'/'+classicTokenAddress, function (error, response, body) {
-        if (!error && response.statusCode == 200) {
-            const dom = new JSDOM(body);
-            const untrimmedContent = dom.window.document.querySelectorAll("dd")[2].textContent;
-            const trimedContent = untrimmedContent.replace(/ /g,'');
-            const number = trimedContent.replace(/BEC/, ''); // bad because we may have to change? Nahh
-            // const number2 = trimedContent.match(/(\d+)/); // would be better but is not working
-            nccTokens = parseInt(number);
-            console.log("Tokens: " +nccTokens);
-            data["NCC_tokens_left"] = nccTokens;
-            resolve(nccTokens);
-        } else{
-            console.log(error);
-        }
-    })
-    });
+    //FOR ETHER CLASSIC CONTRACT
 
-    var etherClassic;
     var etherClassicInWallet = new Promise((resolve, reject)=> { request('http://gastracker.io/addr/'+classicWalletAddress, function (error, response, body2) {
         if (!error && response.statusCode == 200) {
-        const dom2 = new JSDOM(body2);
-        const untrimmedContent2 = dom2.window.document.querySelectorAll("dd")[2].textContent;
-        const trimedContent2 = untrimmedContent2.replace(/ /g,'');
-        const number2 = trimedContent2.replace(/Ether/, ''); // bad because we may have to change? Nahh
-        //   const number2 = trimedContent2.match(/(\d+)/); // would be better but is not working
-        //var etherClassic = parseInt(number2);
-        console.log('Classic Wallet Ether: ' + number2);
-        data["ETC_wallet"] = number2;
-        resolve(number2);
-    } else{
+            const dom = new JSDOM(body2);
+            const untrimmedContent = dom.window.document.querySelectorAll("dd")[2].textContent;
+            const trimmedContent = untrimmedContent.replace(/ /g,'');
+            const number = trimmedContent.replace(/Ether/, ''); // bad because we may have to change? Nahh
+            const etherClassic = parseFloat(number);
+            console.log('Classic Wallet Ether: ' + etherClassic);
+            resolve(etherClassic);
+        } else{
             console.log(error);
         }
     })
@@ -59,50 +40,30 @@ var updateJson = new Promise( (resolve, reject) => {
 
     //FOR ETHEREUM CONTRACT
 
-    //Tokens in a contract
-    //https://api.etherscan.io/api?module=stats&action=tokensupply&contractaddress=0x47f92ebf4881359469bceffe1f753fe910701024&apikey=K2JMIK8PSP47I1BAGDDT6MGXMS4EHW15MH
-
-    //CCE token
-    //https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress=0x47f92ebf4881359469bceffe1f753fe910701024&address=0xDAE0f24b37B36A9Fd2398d396551EC524e284ae7&tag=latest&apikey=K2JMIK8PSP47I1BAGDDT6MGXMS4EHW15MH
-
-    var ncchTokens;
-    var ethereumData = new Promise((resolve, reject)=> { request('https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress='+ ethereumContractAddress +'&address='+ethereumWalletAddress+'&tag=latest&apikey='+etherscanAPIKey, function (error, response, body) {
+    var ethereumInWallet = new Promise((resolve, reject)=> { request('https://etherscan.io/address/'+ethereumWalletAddress, function (error, response, body) {
         if (!error && response.statusCode == 200) {
-            jsonData = JSON.parse(body);
-            ncchTokens = jsonData['result'];
-        console.log("NCCh in account:" + ncchTokens);
+            const dom = new JSDOM(body);
+            const untrimmedContent = dom.window.document.querySelectorAll("td")[1].textContent;
+            const trimedContent = untrimmedContent.replace(/ /g,'');
+            const number = trimedContent.replace(/Ether/, '');
+            const etherBalance = parseFloat(number);
+            console.log('Wallet Ethereum: ' + etherBalance);
+            resolve(etherBalance);
         } else{
             console.log(error);
         }
-        data["NCCh_tokens_left"] = ncchTokens;
-        resolve(ncchTokens);
     })
     });
 
-    var data = {
-        "ETC_wallet": etherClassic,
-        "NCC_tokens_left": nccTokens,
-        "NCCh_tokens_left": ncchTokens
-    };
-
-    // now working out..
-    // we need - number of tokens sold ETC and ETH
-    // NOTE: is going to be very hard to do number of people
-    // need the below file to be written in a promise
-
-    // when(data["ETC_wallet"] != null && data["NCC_tokens_left"] != null && data["NCCh_tokens_left"] != null).then(function(){
-    // Promise.all([ethereumData , etherClassicInWallet , classicTokensInAccount], function(values){
-
-    Promise.all([ethereumData, etherClassicInWallet, classicTokensInAccount]).then(function(value){ //this works but is not ideal
-        console.log("we're in ");
+    Promise.all([etherClassicInWallet, ethereumInWallet]).then(function(value){
+        data["ETC_wallet"] = value[0] - takenOut.ETC_TAKEN_OUT;        
+        data["ETH_wallet"] = value[1] - takenOut.ETH_TAKEN_OUT;
         data["timeStamp"] = moment().unix();
-        console.log(data["timeStamp"]);
         fs.writeFile("./data.json", JSON.stringify(data), function(err) {
             if(err) {
                 return console.log(err);
             }
-            console.log("Values " + value);
-            console.log("The file was saved!");
+            console.log("data.json updated at : ", moment().format());
             resolve(data);
             return data;
         })
@@ -127,3 +88,63 @@ var balanceChecker = new Promise((resolve, reject) => {
 });
 
 module.exports = balanceChecker;
+
+// Below are old functions retrieveing data that we no longer need
+
+// var nccTokens;
+// var classicTokensInAccount = new Promise((resolve, reject)=> { request('https://gastracker.io/token/'+classicTokenAddress+'/'+classicTokenAddress, function (error, response, body) {
+//     if (!error && response.statusCode == 200) {
+//         const dom = new JSDOM(body);
+//         const untrimmedContent = dom.window.document.querySelectorAll("dd")[2].textContent;
+//         const trimedContent = untrimmedContent.replace(/ /g,'');
+//         const number = trimedContent.replace(/BEC/, '');
+//         // const number2 = trimedContent.match(/(\d+)/); // would be better but is not working
+//         nccTokens = parseInt(number);
+//         console.log("Tokens: " +nccTokens);
+//         data["NCC_tokens_left"] = nccTokens;
+//         resolve(nccTokens);
+//     } else{
+//         console.log(error);
+//     }
+// })
+// });
+
+// var etherClassic;
+// var etherClassicInWallet = new Promise((resolve, reject)=> { request('http://gastracker.io/addr/'+classicWalletAddress, function (error, response, body2) {
+//     if (!error && response.statusCode == 200) {
+//     const dom2 = new JSDOM(body2);
+//     const untrimmedContent2 = dom2.window.document.querySelectorAll("dd")[2].textContent;
+//     const trimedContent2 = untrimmedContent2.replace(/ /g,'');
+//     const number2 = trimedContent2.replace(/Ether/, ''); // bad because we may have to change? Nahh
+//     //   const number2 = trimedContent2.match(/(\d+)/); // would be better but is not working
+//     //var etherClassic = parseInt(number2);
+//     console.log('Classic Wallet Ether: ' + number2);
+//     data["ETC_wallet"] = number2;
+//     resolve(number2);
+// } else{
+//         console.log(error);
+//     }
+// })
+// });
+
+
+
+// //Tokens in a contract
+// //https://api.etherscan.io/api?module=stats&action=tokensupply&contractaddress=0x47f92ebf4881359469bceffe1f753fe910701024&apikey=K2JMIK8PSP47I1BAGDDT6MGXMS4EHW15MH
+
+// //CCE token
+// //https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress=0x47f92ebf4881359469bceffe1f753fe910701024&address=0xDAE0f24b37B36A9Fd2398d396551EC524e284ae7&tag=latest&apikey=K2JMIK8PSP47I1BAGDDT6MGXMS4EHW15MH
+
+// var ncchTokens;
+// var ethereumData = new Promise((resolve, reject)=> { request('https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress='+ ethereumContractAddress +'&address='+ethereumWalletAddress+'&tag=latest&apikey='+etherscanAPIKey, function (error, response, body) {
+//     if (!error && response.statusCode == 200) {
+//         jsonData = JSON.parse(body);
+//         ncchTokens = jsonData['result'];
+//     console.log("NCCh in account:" + ncchTokens);
+//     } else{
+//         console.log(error);
+//     }
+//     data["NCCh_tokens_left"] = ncchTokens;
+//     resolve(ncchTokens);
+// })
+// });
