@@ -19,7 +19,7 @@ icoRoutes.use(cookieParser());
 
 //(GET http://localhost:8080/ico)
 icoRoutes.get('/get-token-data', function(req, res) {
-
+  console.log('Getting /get-token-data');
   // Display the balances to all users
   balanceCheker.then((value) => {
       res.json(value);
@@ -27,8 +27,18 @@ icoRoutes.get('/get-token-data', function(req, res) {
 
 });
 
-icoRoutes.get('/get-contract-addresses', function(req, res) {
+icoRoutes.get('/get-total-raised', function(req, res) {
+  console.log('Getting total raised');
+  // Display the balances to all users
+  balanceCheker.then((value) => {
+      console.log("value");
+      let totalRaised = value.ETC_wallet*20 + value.ETH_wallet*700;
+      res.json(totalRaised);
+  });
+});
 
+icoRoutes.get('/get-contract-addresses', function(req, res) {
+  console.log('Getting /get-contract-addresses');
   // Only display contract addresses to people who accept the terms
   if (req.cookies[acceptance_cookie]) {
 

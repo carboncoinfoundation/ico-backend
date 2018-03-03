@@ -15,24 +15,23 @@ var ethereumWalletAddress = process.env.ETHER_WALLET;
 var etherscanAPIKey = process.env.ETHERSCAN_KEY;
 
 var updateJson = new Promise( (resolve, reject) => {
-    var data = {
-        "ETC_contract":null,
-        "ETH_contract":null
-    };
+    var data = {};
+    var takenOut = {
+        "ETH_TAKEN_OUT":0,
+        "ETC_TAKEN_OUT":0,  
+    }
 
     //FOR ETHER CLASSIC CONTRACT
 
-    var contractEtherClassic;
-    var etherClassicInContract = new Promise((resolve, reject)=> { request('http://gastracker.io/contract/'+classicContractAddress, function (error, response, body) {
+    var etherClassicInWallet = new Promise((resolve, reject)=> { request('http://gastracker.io/addr/'+classicWalletAddress, function (error, response, body2) {
         if (!error && response.statusCode == 200) {
-            const dom = new JSDOM(body);
-            const untrimmedContent = dom.window.document.querySelectorAll("dd")[1].textContent;
-            const trimedContent = untrimmedContent.replace(/ /g,'');
-            const number = trimedContent.replace(/Ether/, '');
-            var contractEtherClassic = parseInt(number);
-            console.log('Contract Ether Classic: ' + contractEtherClassic);
-            data["ETC_contract"] = contractEtherClassic;
-            resolve(contractEtherClassic);
+            const dom = new JSDOM(body2);
+            const untrimmedContent = dom.window.document.querySelectorAll("dd")[2].textContent;
+            const trimmedContent = untrimmedContent.replace(/ /g,'');
+            const number = trimmedContent.replace(/Ether/, ''); // bad because we may have to change? Nahh
+            const etherClassic = parseFloat(number);
+            console.log('Classic Wallet Ether: ' + etherClassic);
+            resolve(etherClassic);
         } else{
             console.log(error);
         }
@@ -41,24 +40,24 @@ var updateJson = new Promise( (resolve, reject) => {
 
     //FOR ETHEREUM CONTRACT
 
-    var contractEthereum;
-    var ethereumInContract = new Promise((resolve, reject)=> { request('https://etherscan.io/address/'+ethereumContractAddress, function (error, response, body) {
+    var ethereumInWallet = new Promise((resolve, reject)=> { request('https://etherscan.io/address/'+ethereumWalletAddress, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             const dom = new JSDOM(body);
             const untrimmedContent = dom.window.document.querySelectorAll("td")[1].textContent;
             const trimedContent = untrimmedContent.replace(/ /g,'');
             const number = trimedContent.replace(/Ether/, '');
-            var contractEthereum = parseInt(number);
-            console.log('Contract Ethereum: ' + contractEthereum);
-            data["ETH_contract"] = contractEthereum;
-            resolve(contractEthereum);
+            const etherBalance = parseFloat(number);
+            console.log('Wallet Ethereum: ' + etherBalance);
+            resolve(etherBalance);
         } else{
             console.log(error);
         }
     })
     });
 
-    Promise.all([etherClassicInContract, ethereumInContract]).then(function(value){
+    Promise.all([etherClassicInWallet, ethereumInWallet]).then(function(value){
+        data["ETC_wallet"] = value[0] - takenOut.ETC_TAKEN_OUT;        
+        data["ETH_wallet"] = value[1] - takenOut.ETH_TAKEN_OUT;
         data["timeStamp"] = moment().unix();
         fs.writeFile("./data.json", JSON.stringify(data), function(err) {
             if(err) {
